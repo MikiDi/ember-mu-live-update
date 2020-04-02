@@ -1,7 +1,5 @@
 import Service from '@ember/service';
-import { A } from '@ember/array'
-import ArrayProxy from '@ember/array/proxy';
-import ObjectProxy from '@ember/object/proxy';
+import { A, isArray } from '@ember/array'
 import { later } from '@ember/runloop';
 import { inject as service } from '@ember/service';
 import fetch from 'fetch'
@@ -21,7 +19,7 @@ export default class LiveUpdateService extends Service {
   }
 
   async findAll (type) {
-    const monitoredResource = this.register(this.pollAll, [type], ArrayProxy);
+    const monitoredResource = this.register(this.pollAll, [type]);
     const resource = await this.pollResource.perform(monitoredResource);
     return resource;
   }
@@ -32,7 +30,7 @@ export default class LiveUpdateService extends Service {
   }
 
   async findRecord (type, id) {
-    const monitoredResource = this.register(this.pollRecord, [id, type], ObjectProxy);
+    const monitoredResource = this.register(this.pollRecord, [id, type]);
     const resource = await this.pollResource.perform(monitoredResource);
     return resource;
   }
@@ -43,7 +41,7 @@ export default class LiveUpdateService extends Service {
   }
 
   async query (type, query) {
-    const monitoredResource = this.register(this.pollQuery, [query, type], ArrayProxy);
+    const monitoredResource = this.register(this.pollQuery, [query, type]);
     const resource = await this.pollResource.perform(monitoredResource);
     return resource;
   }
@@ -60,7 +58,7 @@ export default class LiveUpdateService extends Service {
   async poll (modelName, url) {
     const response = await (await fetch(url)).json();
     this.store.pushPayload(modelName, response);
-    if (Array.isArray(response.data)) {
+    if (isArray(response.data)) {
       const result = response.data.map(entity => this.store.peekRecord(modelName, entity.id));
       return A(result);
     } else { // Object
@@ -68,11 +66,11 @@ export default class LiveUpdateService extends Service {
     }
   }
 
-  register(pollingFunction, args, proxy) {
+  register(pollingFunction, args) {
     const monitoredResource = {
       pollingFunction,
       args,
-      proxy
+      resource: null
     };
     this.monitoredResources.pushObject(monitoredResource);
     this.lifecycle(monitoredResource);
@@ -98,7 +96,11 @@ export default class LiveUpdateService extends Service {
 
   @(task(function * (monitoredResource) {
     const resource = yield monitoredResource.pollingFunction.apply(this, monitoredResource.args);
-    monitoredResource.resource.set('content', resource);
+    if (monitoredResource.resource === null) { // Inital poll
+      monitoredResource.resource = resource;
+    } else if (isArray(monitoredResource.resource)) {
+      monitoredResource.resource.setObjects(resource);
+    } // else: no-op, an update object's properties are already tracked through the data-store
     return monitoredResource.resource;
   }).maxConcurrency(1).enqueue()) pollResource;
 }
