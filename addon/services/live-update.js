@@ -2,6 +2,7 @@ import Service from '@ember/service';
 import { A } from '@ember/array'
 import ArrayProxy from '@ember/array/proxy';
 import ObjectProxy from '@ember/object/proxy';
+import { later } from '@ember/runloop';
 import { inject as service } from '@ember/service';
 import fetch from 'fetch'
 import { task } from 'ember-concurrency';
@@ -86,7 +87,7 @@ export default class LiveUpdateService extends Service {
     for (const resource of this.monitoredResources) {
       this.pollResource.perform(resource);
     }
-    window.setTimeout(this.lifecycle.bind(this), this.pollInterval); // TODO: tie in to runloop with "later"
+    later(this, this.lifecycle, this.pollInterval);
   }
 
   @(task(function * (monitoredResource) {
