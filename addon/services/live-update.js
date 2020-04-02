@@ -18,6 +18,13 @@ export default class LiveUpdateService extends Service {
     this.lifecycle();
   }
 
+  /**
+   *
+   * @method findAll
+   * @param {String}	type - Ember data model name
+   * @param {Number}	pollInterval - Poll interval in milliseconds
+   * @return {Array} Array of ember-data models
+   */
   async findAll (type, pollInterval) {
     const monitoredResource = this.register(this.pollAll, [type], pollInterval);
     const resource = await this.pollResource.perform(monitoredResource);
@@ -29,6 +36,14 @@ export default class LiveUpdateService extends Service {
     return this.poll(modelName, url);
   }
 
+  /**
+   *
+   * @method findRecord
+   * @param {String}	type - Ember data model name
+   * @param {String}	id
+   * @param {Number}	pollInterval - Poll interval in milliseconds
+   * @return {Model|null} ember-data model
+   */
   async findRecord (type, id, pollInterval) {
     const monitoredResource = this.register(this.pollRecord, [id, type], pollInterval);
     const resource = await this.pollResource.perform(monitoredResource);
@@ -40,6 +55,14 @@ export default class LiveUpdateService extends Service {
     return this.poll(modelName, url);
   }
 
+  /**
+   *
+   * @method query
+   * @param {String}	type - ember-data model name
+   * @param {Object}	query optional - Query parameters
+   * @param {Number}	pollInterval - Poll interval in milliseconds
+   * @return {Array} Array of ember-data models
+   */
   async query (type, query, pollInterval) {
     const monitoredResource = this.register(this.pollQuery, [query, type], pollInterval);
     const resource = await this.pollResource.perform(monitoredResource);
@@ -78,11 +101,19 @@ export default class LiveUpdateService extends Service {
     return monitoredResource;
   }
 
+
+  /**
+   *
+   * @method unregister
+   * @param {Model|Array}	resource - The resource(s) you'd like to unregister from live updates
+   * @return {Model|Array|null} The resource(s) that successfully got unregistered from live updates
+   */
   unregister (resource) {
-    const r = this.monitoredResources.findBy('resource', resource);
+    const r = this.monitoredResources.findBy('resource', resource) || null;
     if (r) {
       this.monitoredResources.removeObject(r);
     }
+    return r;
   }
 
   lifecycle (monitoredResource) {
