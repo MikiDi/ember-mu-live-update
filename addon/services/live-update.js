@@ -18,8 +18,8 @@ export default class LiveUpdateService extends Service {
     this.lifecycle();
   }
 
-  async findAll (type) {
-    const monitoredResource = this.register(this.pollAll, [type]);
+  async findAll (type, pollInterval) {
+    const monitoredResource = this.register(this.pollAll, [type], pollInterval);
     const resource = await this.pollResource.perform(monitoredResource);
     return resource;
   }
@@ -29,8 +29,8 @@ export default class LiveUpdateService extends Service {
     return this.poll(modelName, url);
   }
 
-  async findRecord (type, id) {
-    const monitoredResource = this.register(this.pollRecord, [id, type]);
+  async findRecord (type, id, pollInterval) {
+    const monitoredResource = this.register(this.pollRecord, [id, type], pollInterval);
     const resource = await this.pollResource.perform(monitoredResource);
     return resource;
   }
@@ -40,8 +40,8 @@ export default class LiveUpdateService extends Service {
     return this.poll(modelName, url);
   }
 
-  async query (type, query) {
-    const monitoredResource = this.register(this.pollQuery, [query, type]);
+  async query (type, query, pollInterval) {
+    const monitoredResource = this.register(this.pollQuery, [query, type], pollInterval);
     const resource = await this.pollResource.perform(monitoredResource);
     return resource;
   }
@@ -66,10 +66,11 @@ export default class LiveUpdateService extends Service {
     }
   }
 
-  register(pollingFunction, args) {
+  register(pollingFunction, args, pollInterval) {
     const monitoredResource = {
       pollingFunction,
       args,
+      pollInterval,
       resource: null
     };
     this.monitoredResources.pushObject(monitoredResource);
