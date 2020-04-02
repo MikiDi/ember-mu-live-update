@@ -89,9 +89,7 @@ export default class LiveUpdateService extends Service {
       this.pollResource.perform(monitoredResource);
       const timeout = this.monitoredResources.pollInterval || this.defaultPollInterval;
       later(this, this.lifecycle, monitoredResource, timeout);
-    } else { // Resource got unregistered since last run
-      return;
-    }
+    } // else: Resource got unregistered since last run, don't do anything
   }
 
   @(task(function * (monitoredResource) {
