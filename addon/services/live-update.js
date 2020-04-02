@@ -12,7 +12,7 @@ export default class LiveUpdateService extends Service {
   @service store;
 
   @tracked monitoredResources = null;
-  pollInterval = 4000;
+  defaultPollInterval = 4000;
 
   constructor () {
     super(...arguments);
@@ -69,11 +69,14 @@ export default class LiveUpdateService extends Service {
   }
 
   register(pollingFunction, args, proxy) {
-    return this.monitoredResources.pushObject({
+    const monitoredResource = {
       pollingFunction,
       args,
-      resource: proxy.create()
-    });
+      proxy
+    };
+    this.monitoredResources.pushObject(monitoredResource);
+    this.lifecycle(monitoredResource);
+    return monitoredResource;
   }
 
   unregister (resource) {
@@ -83,11 +86,14 @@ export default class LiveUpdateService extends Service {
     }
   }
 
-  lifecycle () {
-    for (const resource of this.monitoredResources) {
-      this.pollResource.perform(resource);
+  lifecycle (monitoredResource) {
+    if (this.monitoredResources.includes(monitoredResource)) {
+      this.pollResource.perform(monitoredResource);
+      const timeout = this.monitoredResources.pollInterval || this.defaultPollInterval;
+      later(this, this.lifecycle, monitoredResource, timeout);
+    } else { // Resource got unregistered since last run
+      return;
     }
-    later(this, this.lifecycle, this.pollInterval);
   }
 
   @(task(function * (monitoredResource) {
