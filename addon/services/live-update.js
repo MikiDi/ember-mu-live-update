@@ -52,7 +52,13 @@ export default class LiveUpdateService extends PollUpdateService {
 
   async register(pollingFunction, args, pollInterval) {
     const resource = await pollingFunction.apply(this, args);
-    const sub = await (await fetch(`/subscriptions`, { method: 'POST' })).json();
+    const res = await fetch(`/subscriptions`, {
+      method: 'POST',
+      headers: {
+        'mu-head-id': this.headIdentification.headId
+      }
+    });
+    const sub = await res.json();
     const monitoredSub = {
       id: sub.id,
       pollingFunction,
@@ -75,7 +81,12 @@ export default class LiveUpdateService extends PollUpdateService {
   async unregister (resource) {
     const sub = this.monitoredSubscriptions.findBy('resource', resource) || null;
     if (sub) {
-      await fetch(`/subscriptions/${sub.id}`, { method: 'DELETE' });
+      await fetch(`/subscriptions/${sub.id}`, {
+        method: 'DELETE',
+        headers: {
+          'mu-head-id': this.headIdentification.headId
+        }
+      });
       this.monitoredSubscriptions.removeObject(sub);
     }
     return sub;
@@ -90,7 +101,12 @@ export default class LiveUpdateService extends PollUpdateService {
   }
 
   @(task(function * (sub) {
-    const res = yield fetch(`/subscriptions/${sub.id}`);
+    const res = yield fetch(`/subscriptions/${sub.id}`, {
+      method: 'GET',
+      headers: {
+        'mu-head-id': this.headIdentification.headId
+      }
+    });
     if (res.status === 205) {
       const resource = yield sub.pollingFunction.apply(this, sub.args);
       if (isArray(sub.resource)) {
