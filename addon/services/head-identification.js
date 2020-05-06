@@ -1,7 +1,7 @@
 import Service from '@ember/service';
 import { v4 as uuidv4 } from 'uuid';
 
-export default class headIdentificationService extends Service {
+export default class HeadIdentificationService extends Service {
 
   headIdKey = 'mu-head-id';
 
