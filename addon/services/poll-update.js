@@ -6,7 +6,7 @@ import fetch from 'fetch'
 import { task } from 'ember-concurrency';
 import { tracked } from '@glimmer/tracking';
 
-export default class LiveUpdateService extends Service {
+export default class PollUpdateService extends Service {
   @service store;
 
   @tracked monitoredResources = null;
