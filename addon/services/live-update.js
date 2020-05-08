@@ -52,14 +52,21 @@ export default class LiveUpdateService extends PollUpdateService {
 
   async register(pollingFunction, args, pollInterval) {
     const resource = await pollingFunction.apply(this, args);
+    let body;
+    if (isArray(resource)) {
+      body = { data: resource.map(r => r.serialize({ includeId: true }).data) };
+    } else {
+      body = { data: resource.serialize({ includeId: true }) };
+    }
     const res = await fetch('/subscribe', {
       method: 'POST',
       headers: {
         "Content-type": "application/vnd.api+json; charset=UTF-8",
         'mu-head-id': this.headIdentification.headId
-      }
+      },
+      body: JSON.stringify(body)
     });
-    const sub = await res.json();
+    const sub = (await res.json()).data;
     const monitoredSub = {
       id: sub.id,
       pollingFunction,
