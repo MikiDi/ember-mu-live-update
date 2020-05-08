@@ -52,9 +52,10 @@ export default class LiveUpdateService extends PollUpdateService {
 
   async register(pollingFunction, args, pollInterval) {
     const resource = await pollingFunction.apply(this, args);
-    const res = await fetch(`/subscriptions`, {
+    const res = await fetch('/subscribe', {
       method: 'POST',
       headers: {
+        "Content-type": "application/vnd.api+json; charset=UTF-8",
         'mu-head-id': this.headIdentification.headId
       }
     });
@@ -84,6 +85,7 @@ export default class LiveUpdateService extends PollUpdateService {
       await fetch(`/subscriptions/${sub.id}`, {
         method: 'DELETE',
         headers: {
+          "Content-type": "application/vnd.api+json; charset=UTF-8",
           'mu-head-id': this.headIdentification.headId
         }
       });
@@ -104,6 +106,7 @@ export default class LiveUpdateService extends PollUpdateService {
     const res = yield fetch(`/subscriptions/${sub.id}`, {
       method: 'GET',
       headers: {
+        "Content-type": "application/vnd.api+json; charset=UTF-8",
         'mu-head-id': this.headIdentification.headId
       }
     });
